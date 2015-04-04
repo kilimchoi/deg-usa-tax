@@ -9,11 +9,6 @@ describe Transaction do
     expect(tx.date).to eq Date.new(2013)
   end
 
-  it 'rejects a date that is not a Date' do
-    expect { Transaction.new(:foo, :purchase, 1, 4) }.to \
-      raise_error ArgumentError, 'expected a Date, got :foo'
-  end
-
   it 'holds the type' do
     expect(tx.type).to eq :purchase
   end
