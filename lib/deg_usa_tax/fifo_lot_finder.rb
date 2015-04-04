@@ -24,22 +24,22 @@ module DegUsaTax
         }
       when :sale
         sale = transaction
-          unaccounted_amount = sale.amount
-          while unaccounted_amount > 0
-            purchase_info = @unmatched_purchase_infos.first
-            raise 'unmatched sale' if purchase_info.nil?
+        unaccounted_amount = sale.amount
+        while unaccounted_amount > 0
+          purchase_info = @unmatched_purchase_infos.first
+          raise 'unmatched sale' if purchase_info.nil?
 
-            purchase = purchase_info[:transaction]
+          purchase = purchase_info[:transaction]
 
-            amount = [unaccounted_amount, purchase.amount].min
-            lots << Lot.new(amount, purchase, sale)
+          amount = [unaccounted_amount, purchase.amount].min
+          lots << Lot.new(amount, purchase, sale)
 
-            unaccounted_amount -= amount
-            purchase_info[:unaccounted_amount] -= amount
-            if purchase_info[:unaccounted_amount].zero?
-              @unmatched_purchase_infos.shift
-            end
+          unaccounted_amount -= amount
+          purchase_info[:unaccounted_amount] -= amount
+          if purchase_info[:unaccounted_amount].zero?
+            @unmatched_purchase_infos.shift
           end
+        end
       end
     end
   end
