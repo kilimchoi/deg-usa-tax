@@ -8,14 +8,14 @@ describe 'break_into_lots' do
   end
 
   specify 'given an empty array, returns an emtpy array' do
-    expect(break_into_lots([])).to eq []
+    expect(bl([])).to eq []
   end
 
   specify 'given one purchase, returns an empty array' do
     txs = [
       Transaction.new(nil, :purchase, 1, 4)
     ]
-    expect(break_into_lots(txs)).to eq []
+    expect(bl(txs)).to eq []
   end
 
   specify 'given one purchase, and a smaller sale, returns a lot' do

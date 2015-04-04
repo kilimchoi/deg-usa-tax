@@ -18,7 +18,7 @@ describe Transaction do
   end
 
   it 'holds the unit_price' do
-    expect(tx.unit_price).to eq 4
+    expect(tx.price).to eq 4
   end
 end
 
