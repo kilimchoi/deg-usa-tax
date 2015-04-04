@@ -20,32 +20,39 @@ module DegUsaTax
 
       case transaction.type
       when :purchase
-        @unmatched_purchase_infos << {
-          transaction: transaction,
-          unaccounted_amount: transaction.amount
-        }
+        add_purchase(transaction)
       when :sale
-        sale = transaction
-        unaccounted_amount = sale.amount
-        while unaccounted_amount > 0
-          purchase_info = @unmatched_purchase_infos.first
-          raise 'unmatched sale' if purchase_info.nil?
-
-          purchase = purchase_info[:transaction]
-
-          amount = [unaccounted_amount, purchase.amount].min
-          lots << Lot.new(amount, purchase, sale)
-
-          unaccounted_amount -= amount
-          purchase_info[:unaccounted_amount] -= amount
-          if purchase_info[:unaccounted_amount].zero?
-            @unmatched_purchase_infos.shift
-          end
-        end
+        add_sale(transaction)
       end
     end
 
     private
+
+    def add_purchase(purchase)
+      @unmatched_purchase_infos << {
+        transaction: purchase,
+        unaccounted_amount: purchase.amount
+      }
+    end
+
+    def add_sale(sale)
+      unaccounted_amount = sale.amount
+      while unaccounted_amount > 0
+        purchase_info = @unmatched_purchase_infos.first
+        raise 'unmatched sale' if purchase_info.nil?
+
+        purchase = purchase_info[:transaction]
+
+        amount = [unaccounted_amount, purchase.amount].min
+        lots << Lot.new(amount, purchase, sale)
+
+        unaccounted_amount -= amount
+        purchase_info[:unaccounted_amount] -= amount
+        if purchase_info[:unaccounted_amount].zero?
+          @unmatched_purchase_infos.shift
+        end
+      end
+    end
 
     def handle_transaction_date(date)
       if @last_transaction_date && date < @last_transaction_date
