@@ -16,6 +16,8 @@ module DegUsaTax
     end
 
     def add_transaction(transaction)
+      handle_transaction_date(transaction.date)
+
       case transaction.type
       when :purchase
         @unmatched_purchase_infos << {
@@ -41,6 +43,16 @@ module DegUsaTax
           end
         end
       end
+    end
+
+    private
+
+    def handle_transaction_date(date)
+      if @last_transaction_date && date < @last_transaction_date
+        raise ArgumentError, 'transaction dates are out of order: ' \
+          "#{@last_transaction_date} followed by #{date}"
+      end
+      @last_transaction_date = date
     end
   end
 end

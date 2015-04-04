@@ -72,4 +72,13 @@ describe DegUsaTax::FifoLotFinder do
       [1, txs[0], txs[2]],
     ]
   end
+
+  specify 'given transactions with out-of-order dates, raises an error' do
+    txs = [
+      Transaction.new(Date.new(2015), :purchase, 2, 4),
+      Transaction.new(Date.new(2014), :purchase, 2, 4),
+    ]
+    expect { bl(txs) }.to raise_error \
+      ArgumentError, 'transaction dates are out of order: 2015-01-01 followed by 2014-01-01'
+  end
 end
