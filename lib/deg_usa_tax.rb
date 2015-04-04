@@ -26,4 +26,11 @@ module DegUsaTax
     end
     num
   end
+
+  def self.normalize_transaction(transaction)
+    if !transaction.is_a?(Transaction)
+      fail ArgumentError, "expected a Transaction, got #{transaction.inspect}"
+    end
+    transaction
+  end
 end

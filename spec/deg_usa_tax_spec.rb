@@ -43,4 +43,16 @@ describe DegUsaTax do
       expect(DegUsaTax.normalize_positive_bigdecimal(1)).to eql BigDecimal(1)
     end
   end
+
+  describe 'normalize_transaction' do
+    it 'accepts a Transaction' do
+      t = Transaction.new(Date.new(2000), :purchase, 1, 2)
+      expect(DegUsaTax.normalize_transaction(t)).to eql t
+    end
+
+    it 'rejects junk' do
+      expect { DegUsaTax.normalize_transaction(:x) }.to \
+        raise_error ArgumentError, 'expected a Transaction, got :x'
+    end
+  end
 end
