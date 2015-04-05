@@ -6,6 +6,7 @@ require 'deg_usa_tax/fifo_lot_finder'
 require 'deg_usa_tax/assign_prices'
 require 'deg_usa_tax/lot_pricer'
 require 'deg_usa_tax/lot_index'
+require 'deg_usa_tax/bitcoin/wallet'
 
 module DegUsaTax
   def self.normalize_date(date)
