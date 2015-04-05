@@ -23,7 +23,7 @@ describe 'assign_prices' do
     expect(DegUsaTax.assign_prices(1, [55, 45])).to eq [BigDecimal('0.55'), BigDecimal('0.45')]
   end
 
-  it 'avoids rounding errors by subtracting the rounding error from the last entry' do
+  it 'avoids rounding errors by adjusting the last entry' do
     expect(DegUsaTax.assign_prices(1, [1, 1, 1])).to eq [
       BigDecimal('0.33'),
       BigDecimal('0.33'),

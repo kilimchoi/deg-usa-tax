@@ -8,11 +8,12 @@ module DegUsaTax
       @last_transaction_date = nil
     end
 
-    def break_into_lots(transactions)
+    def self.break_into_lots(transactions)
+      lf = new
       transactions.each do |transaction|
-        add_transaction transaction
+        lf.add_transaction transaction
       end
-      lots
+      lf.lots
     end
 
     def add_transaction(transaction)

@@ -2,8 +2,7 @@ require_relative 'spec_helper'
 
 describe DegUsaTax::FifoLotFinder do
   def bl(transactions)
-    lot_finder = described_class.new
-    lots = lot_finder.break_into_lots(transactions)
+    lots = described_class.break_into_lots(transactions)
     lots.map do |lot|
       [ lot.amount, lot.purchase, lot.sale ]
     end
