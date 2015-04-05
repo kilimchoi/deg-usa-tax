@@ -14,6 +14,10 @@ module DegUsaTax
     unaccounted_price = total_price
     prices = weights.map do |weight|
       if unaccounted_weight.zero?
+        # This might not be necessary, but it guarantees that if all
+        # the weights add up to the total weight, then all the prices
+        # will add up to the total price, regardless of errors
+        # produced by the division and rounding below.
         price = unaccounted_price
       else
         price = (unaccounted_price * weight / unaccounted_weight).round(2)
