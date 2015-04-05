@@ -3,6 +3,7 @@ require 'bigdecimal'
 require 'deg_usa_tax/transaction'
 require 'deg_usa_tax/lot'
 require 'deg_usa_tax/fifo_lot_finder'
+require 'deg_usa_tax/assign_prices'
 
 module DegUsaTax
   def self.normalize_date(date)
