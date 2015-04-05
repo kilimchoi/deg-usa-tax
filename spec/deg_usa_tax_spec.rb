@@ -59,6 +59,18 @@ describe DegUsaTax do
     end
   end
 
+  describe 'normalize_nonnegative_whole_penny_bigdecimal' do
+    it 'accepts 1.11' do
+      expect(DegUsaTax.normalize_nonnegative_whole_penny_bigdecimal('1.11'))
+        .to eql BigDecimal('1.11')
+    end
+
+    it 'rejects 1.111' do
+      expect { DegUsaTax.normalize_nonnegative_whole_penny_bigdecimal('1.111') }
+        .to raise_error ArgumentError, 'expected whole pennies, got 1.111'
+    end
+  end
+
   describe 'normalize_transaction' do
     it 'accepts a Transaction' do
       t = Transaction.new(Date.new(2000), :purchase, 1, 2)

@@ -38,6 +38,14 @@ module DegUsaTax
     num
   end
 
+  def self.normalize_nonnegative_whole_penny_bigdecimal(num)
+    num = normalize_nonnegative_bigdecimal(num)
+    if num != num.round(2)
+      fail ArgumentError, "expected whole pennies, got 1.111"
+    end
+    num
+  end
+
   def self.normalize_transaction(transaction)
     if !transaction.is_a?(Transaction)
       fail ArgumentError, "expected a Transaction, got #{transaction.inspect}"
