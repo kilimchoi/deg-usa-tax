@@ -1,5 +1,8 @@
 module DegUsaTax
   module LotPricer
+    # Note: Because of the way we correct for rounding errors in
+    # assign_prices, the order of the lots passed to this method does
+    # matter.
     def self.price_lots(input_lots)
       lot_index = LotIndex.new(input_lots)
       output_lots = input_lots.dup
@@ -7,11 +10,8 @@ module DegUsaTax
       # Figure out purchase prices.
       lot_index.each_purchase do |purchase|
         lots = lot_index.each_lot_for(purchase).to_a
-        weights = lots.map(&:amount)
-        weights << purchase.amount - weights.inject(:+)
-
-        prices = DegUsaTax.assign_prices(purchase.price, weights)
-        prices.pop
+        amounts = lots.map(&:amount)
+        prices = DegUsaTax.assign_prices(purchase.price, purchase.amount, amounts)
 
         lots.zip(prices).each do |lot, purchase_price|
           index = input_lots.index(lot)
@@ -22,11 +22,8 @@ module DegUsaTax
       # Figure out sale prices.
       lot_index.each_sale do |sale|
         lots = lot_index.each_lot_for(sale).to_a
-        weights = lots.map(&:amount)
-        weights << sale.amount - weights.inject(:+)
-
-        prices = DegUsaTax.assign_prices(sale.price, weights)
-        prices.pop
+        amounts = lots.map(&:amount)
+        prices = DegUsaTax.assign_prices(sale.price, sale.amount, amounts)
 
         lots.zip(prices).each do |lot, sale_price|
           index = input_lots.index(lot)

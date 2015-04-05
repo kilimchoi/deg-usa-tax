@@ -59,14 +59,14 @@ describe DegUsaTax do
     end
   end
 
-  describe 'normalize_nonnegative_whole_penny_bigdecimal' do
+  describe 'normalize_nonnegative_wholepenny_bigdecimal' do
     it 'accepts 1.11' do
-      expect(DegUsaTax.normalize_nonnegative_whole_penny_bigdecimal('1.11'))
+      expect(DegUsaTax.normalize_nonnegative_wholepenny_bigdecimal('1.11'))
         .to eql BigDecimal('1.11')
     end
 
     it 'rejects 1.111' do
-      expect { DegUsaTax.normalize_nonnegative_whole_penny_bigdecimal('1.111') }
+      expect { DegUsaTax.normalize_nonnegative_wholepenny_bigdecimal('1.111') }
         .to raise_error ArgumentError, 'expected whole pennies, got 1.111'
     end
   end

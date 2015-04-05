@@ -38,7 +38,7 @@ module DegUsaTax
     num
   end
 
-  def self.normalize_nonnegative_whole_penny_bigdecimal(num)
+  def self.normalize_nonnegative_wholepenny_bigdecimal(num)
     num = normalize_nonnegative_bigdecimal(num)
     if num != num.round(2)
       fail ArgumentError, "expected whole pennies, got 1.111"
