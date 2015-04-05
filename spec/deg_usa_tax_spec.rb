@@ -44,6 +44,21 @@ describe DegUsaTax do
     end
   end
 
+  describe 'normalize_nonnegative_bigdecimal' do
+    it 'accepts 0' do
+      expect(DegUsaTax.normalize_nonnegative_bigdecimal(0)).to eq BigDecimal(0)
+    end
+
+    it 'rejects -1' do
+      expect { DegUsaTax.normalize_nonnegative_bigdecimal(-1) }.to \
+        raise_error ArgumentError, 'expected non-negative number, got -1.0'
+    end
+
+    it 'converts 1 to a BigDecimal' do
+      expect(DegUsaTax.normalize_nonnegative_bigdecimal(1)).to eql BigDecimal(1)
+    end
+  end
+
   describe 'normalize_transaction' do
     it 'accepts a Transaction' do
       t = Transaction.new(Date.new(2000), :purchase, 1, 2)

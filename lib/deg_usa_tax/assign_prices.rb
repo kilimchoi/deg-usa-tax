@@ -8,7 +8,7 @@ module DegUsaTax
       end
       return []
     end
-    weights = weights.map &DegUsaTax.method(:normalize_positive_bigdecimal)
+    weights = weights.map &DegUsaTax.method(:normalize_nonnegative_bigdecimal)
 
     total_weight = weights.inject(:+)
 

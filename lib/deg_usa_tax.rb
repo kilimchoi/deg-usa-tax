@@ -5,6 +5,7 @@ require 'deg_usa_tax/lot'
 require 'deg_usa_tax/fifo_lot_finder'
 require 'deg_usa_tax/assign_prices'
 require 'deg_usa_tax/lot_pricer'
+require 'deg_usa_tax/lot_index'
 
 module DegUsaTax
   def self.normalize_date(date)
@@ -25,6 +26,14 @@ module DegUsaTax
     num = normalize_bigdecimal(num)
     if num <= 0
       fail ArgumentError, "expected positive number, got #{num.to_s('F')}"
+    end
+    num
+  end
+
+  def self.normalize_nonnegative_bigdecimal(num)
+    num = normalize_bigdecimal(num)
+    if num < 0
+      fail ArgumentError, "expected non-negative number, got #{num.to_s('F')}"
     end
     num
   end

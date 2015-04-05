@@ -6,12 +6,18 @@ class Lot
     @purchase = DegUsaTax.normalize_transaction(purchase)
     @sale = DegUsaTax.normalize_transaction(sale)
 
-    if @purchase_price
+    if purchase_price
       @purchase_price = DegUsaTax.normalize_positive_bigdecimal(purchase_price)
     end
 
-    if @sale_price
+    if sale_price
       @sale_price = DegUsaTax.normalize_positive_bigdecimal(sale_price)
     end
+  end
+
+  def copy_and_change(opts)
+    purchase_price = opts.fetch(:purchase_price) { self.purchase_price }
+    sale_price = opts.fetch(:sale_price) { self.sale_price }
+    Lot.new(amount, purchase, sale, purchase_price, sale_price)
   end
 end
