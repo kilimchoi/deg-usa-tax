@@ -24,6 +24,8 @@ module DegUsaTax
         add_purchase(transaction)
       when :sale
         add_sale(transaction)
+      else
+        raise "Unrecognized transaction type: #{transaction.type}"
       end
     end
 
