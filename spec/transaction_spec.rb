@@ -15,7 +15,7 @@ describe Transaction do
 
   it 'rejects bad types' do
     expect { Transaction.new(Date.new(2000), 44, 1, 4) }.to \
-      raise_error ArgumentError, 'expected :purchase or :sale, got 44'
+      raise_error ArgumentError, 'expected :purchase, :sale, or :donation, got 44'
   end
 
   it 'holds the amount' do

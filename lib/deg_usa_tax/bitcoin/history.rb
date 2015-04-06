@@ -37,7 +37,7 @@ module DegUsaTax
       def donate_btc(date, amount_btc, wallet, opts = {})
         date = DegUsaTax.normalize_date(date)
         amount_btc = Bitcoin.normalize_positive_bitcoin(amount_btc)
-        wallet = DegUsaTax.normalize_wallet(wallet)
+        wallet = normalize_wallet(wallet)
 
         valid_keys = [:for, :txid, :fee]
         invalid_keys = opts.keys - valid_keys
@@ -47,7 +47,7 @@ module DegUsaTax
 
         # TODO: do something with the txid
 
-        fee = DegUsaTax.normalize_nonnegative_bitcoin(opts.fetch(:fee, 0))
+        fee = Bitcoin.normalize_nonnegative_bitcoin(opts.fetch(:fee, 0))
 
         if wallet.balance < amount_btc + fee
           raise "Wallet only has #{wallet.balance}, cannot donate #{amount_btc} + #{fee}."
@@ -55,7 +55,8 @@ module DegUsaTax
 
         wallet.balance -= amount_btc + fee
 
-        $tracker.new_donation_of_bitcoin(date, amount_btc + fee)
+        transaction = Transaction.new(date, :donation, amount_btc + fee, 0)
+        @lot_tracker.add_transaction(transaction)
       end
 
       def move_btc(date, amount_btc, source_wallet, opts = {})

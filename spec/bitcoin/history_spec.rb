@@ -41,6 +41,7 @@ describe DegUsaTax::Bitcoin::History do
 
     it 'adds a transaction with the correct fields to the lot tracker' do
       expect(@tx.date).to eql Date.new(2013)
+      expect(@tx.type).to eql :purchase
       expect(@tx.amount).to eql BigDecimal('1.0005')
       expect(@tx.price).to eql BigDecimal('120.00')
     end
@@ -53,6 +54,17 @@ describe DegUsaTax::Bitcoin::History do
       history.buy_btc_with_usd Date.new(2013), '1.0005', '120.00', :brain,
         txid: '1e43f56893e1c2edac86ca25ce46862dd5e664849aa866cdad5a92e4c562a86e'
       history.donate_btc Date.new(2014), '0.0015', :brain, fee: '0.0005'
+    end
+
+    it 'removes the fee and donation from the wallet' do
+      expect(history.wallet(:brain).balance).to eq BigDecimal('0.9985')
+    end
+
+    it 'adds a transaction with the correct fields' do
+      expect(@tx.date).to eq Date.new(2014)
+      expect(@tx.type).to eql :donation
+      expect(@tx.amount).to eql BigDecimal('0.002')
+      expect(@tx.price).to eql BigDecimal('0')
     end
   end
 end

@@ -5,14 +5,14 @@ class Transaction
     @date = DegUsaTax.normalize_date(date)
     @type = normalize_type(type)
     @amount = DegUsaTax.normalize_positive_bigdecimal(amount)
-    @price = DegUsaTax.normalize_positive_bigdecimal(price)
+    @price = DegUsaTax.normalize_nonnegative_wholepenny_bigdecimal(price)
   end
 
   private
 
   def normalize_type(type)
-    if ![:purchase, :sale].include?(type)
-      raise ArgumentError, "expected :purchase or :sale, got #{type.inspect}"
+    if ![:purchase, :sale, :donation].include?(type)
+      raise ArgumentError, "expected :purchase, :sale, or :donation, got #{type.inspect}"
     end
     type
   end
