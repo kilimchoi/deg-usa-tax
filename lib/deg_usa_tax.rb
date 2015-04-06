@@ -8,6 +8,7 @@ require 'deg_usa_tax/assign_prices'
 require 'deg_usa_tax/lot_pricer'
 require 'deg_usa_tax/lot_index'
 
+require 'deg_usa_tax/bitcoin/normalize'
 require 'deg_usa_tax/bitcoin/history'
 require 'deg_usa_tax/bitcoin/wallet'
 

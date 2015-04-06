@@ -20,24 +20,24 @@ module DegUsaTax
       end
 
       def buy_btc_with_usd(date, amount_btc, amount_usd, wallet, opts = {})
-        date = normalize_date(date)
-        amount_btc = normalize_positive_btc(amount_btc)
-        amount_usd = normalize_nonneg_usd(amount_usd)
+        amount_btc = Bitcoin.normalize_positive_bitcoin(amount_btc)
+        amount_usd = DegUsaTax.normalize_nonnegative_wholepenny_bigdecimal(amount_usd)
         wallet = normalize_wallet(wallet)
 
         unless wallet.off_chain?
           # TODO: do something with the txid provided by the user
         end
 
-        $tracker.new_purchase_of_bitcoin(date, amount_btc, amount_usd)
+        transaction = Transaction.new(date, :purchase, amount_btc, amount_usd)
+        @lot_tracker.add_transaction(transaction)
 
         wallet.balance += amount_btc
       end
 
       def donate_btc(date, amount_btc, wallet, opts = {})
-        date = normalize_date(date)
-        amount_btc = normalize_positive_btc(amount_btc)
-        wallet = normalize_wallet(wallet)
+        date = DegUsaTax.normalize_date(date)
+        amount_btc = Bitcoin.normalize_positive_bitcoin(amount_btc)
+        wallet = DegUsaTax.normalize_wallet(wallet)
 
         valid_keys = [:for, :txid, :fee]
         invalid_keys = opts.keys - valid_keys
@@ -47,7 +47,7 @@ module DegUsaTax
 
         # TODO: do something with the txid
 
-        fee = normalize_nonneg_btc(opts.fetch(:fee, 0))
+        fee = DegUsaTax.normalize_nonnegative_bitcoin(opts.fetch(:fee, 0))
 
         if wallet.balance < amount_btc + fee
           raise "Wallet only has #{wallet.balance}, cannot donate #{amount_btc} + #{fee}."
