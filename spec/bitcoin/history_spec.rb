@@ -60,11 +60,64 @@ describe DegUsaTax::Bitcoin::History do
       expect(history.wallet(:brain).balance).to eq BigDecimal('0.9985')
     end
 
-    it 'adds a transaction with the correct fields' do
+    it 'adds a donation transaction' do
       expect(@tx.date).to eq Date.new(2014)
-      expect(@tx.type).to eql :donation
-      expect(@tx.amount).to eql BigDecimal('0.002')
-      expect(@tx.price).to eql BigDecimal('0')
+      expect(@tx.type).to eq :donation
+      expect(@tx.amount).to eq BigDecimal('0.002')
+      expect(@tx.price).to eq BigDecimal('0')
+    end
+  end
+
+  describe 'move_btc' do
+    before do
+      allow(lot_tracker).to receive(:add_transaction) { |tx| @tx = tx }
+      history.create_wallet :brain
+      history.create_wallet :coinbase, off_chain: true
+      history.buy_btc_with_usd Date.new(2013), '1.0', '120.00', :coinbase
+      history.buy_btc_with_usd Date.new(2013), '0.01', '1.00', :brain
+    end
+
+    context 'normal case' do
+      before do
+        history.move_btc Date.new(2014), '0.6', :coinbase, to: :brain, fee: '0.0001',
+          txid: '1e43f56893e1c2edac86ca25ce46862dd5e664849aa866cdad5a92e4c562a86e'
+      end
+
+      it 'adds a donation transaction for the fee' do
+        expect(@tx.date).to eq Date.new(2014)
+        expect(@tx.type).to eq :donation
+        expect(@tx.amount).to eq BigDecimal('0.0001')
+        expect(@tx.price).to eq 0
+      end
+
+      it 'deducts the amount and fee from the source wallet' do
+        expect(history.wallet(:coinbase).balance).to eq BigDecimal('0.3999')
+      end
+
+      it 'adds the amount to the destination wallet' do
+        expect(history.wallet(:brain).balance).to eq BigDecimal('0.61')
+      end
+    end
+
+    context 'no fee' do
+      before do
+        @tx = nil
+        history.move_btc Date.new(2014), '0.6', :coinbase, to: :brain,
+          txid: '1e43f56893e1c2edac86ca25ce46862dd5e664849aa866cdad5a92e4c562a86e'
+      end
+
+      it 'adds no transaction' do
+        expect(@tx).to eq nil
+      end
+    end
+
+    context 'not enough money at source' do
+      it 'raises an error' do
+        expect do
+          history.move_btc Date.new(2014), '0.6', :brain, to: :coinbase, fee: '0.0001',
+           txid: '1e43f56893e1c2edac86ca25ce46862dd5e664849aa866cdad5a92e4c562a86e'
+        end.to raise_error "Wallet only has 0.01, cannot move 0.6 + 0.0001."
+      end
     end
   end
 end

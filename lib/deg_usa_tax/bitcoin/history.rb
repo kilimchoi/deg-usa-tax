@@ -60,8 +60,8 @@ module DegUsaTax
       end
 
       def move_btc(date, amount_btc, source_wallet, opts = {})
-        date = normalize_date(date)
-        amount_btc = normalize_positive_btc(amount_btc)
+        date = DegUsaTax.normalize_date(date)
+        amount_btc = Bitcoin.normalize_positive_bitcoin(amount_btc)
         source_wallet = normalize_wallet(source_wallet)
 
         valid_keys = [:fee, :txid, :to]
@@ -70,18 +70,23 @@ module DegUsaTax
           raise ArgumentError, "Invalid keys: #{invalid_keys.inspect}"
         end
 
-        fee = normalize_nonneg_btc(opts.fetch(:fee, 0))
+        fee = Bitcoin.normalize_nonnegative_bitcoin(opts.fetch(:fee, 0))
         dest_wallet = normalize_wallet(opts.fetch(:to))
 
         # TODO: do something with the txid
 
         if source_wallet.balance < amount_btc + fee
-          raise "Wallet only has #{source_wallet.balance}, cannot move #{amount_btc} + #{fee}."
+          raise "Wallet only has #{source_wallet.balance.to_s('F')}, " \
+                "cannot move #{amount_btc.to_s('F')} + #{fee.to_s('F')}."
         end
 
         source_wallet.balance -= (amount_btc + fee)
         dest_wallet.balance += amount_btc
-        $tracker.new_fee(date, fee)
+
+        if !fee.zero?
+          transaction = Transaction.new(date, :donation, fee, 0)
+          @lot_tracker.add_transaction(transaction)
+        end
       end
 
       def purchase_with_btc(date, amount_btc, market_value_usd, wallet, opts = {})
