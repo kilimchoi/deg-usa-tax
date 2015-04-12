@@ -126,12 +126,13 @@ module DegUsaTax
 
       def assert_balance(wallet, expected_balance)
         wallet = normalize_wallet(wallet)
-        expected_balance = normalize_nonneg_btc(expected_balance)
+        expected_balance = Bitcoin.normalize_nonnegative_bitcoin(expected_balance)
         actual_balance = wallet.balance
         if expected_balance != actual_balance
           diff = actual_balance - expected_balance
-          raise 'Expected %s balance of %f, got %f.  Difference: %f' %
-                [wallet.name, expected_balance, actual_balance, diff]
+          raise 'Expected %s balance of %s, got %s.  Difference: %s' %
+                [wallet.name, expected_balance.to_s('F'),
+                 actual_balance.to_s('F'), diff.to_s('F')]
         end
       end
 

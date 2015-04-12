@@ -171,4 +171,21 @@ describe DegUsaTax::Bitcoin::History do
       expect(@tx.price).to eq BigDecimal('2.04')
     end
   end
+
+  describe 'assert_balance' do
+    before do
+      allow(lot_tracker).to receive(:add_transaction) { |tx| @tx = tx }
+      history.create_wallet :brain
+      history.income_btc Date.new(2014), '0.01', '2.04', :brain
+    end
+
+    it 'does nothing is the assertion is right' do
+      expect { history.assert_balance(:brain, '0.01') }.to_not raise_error
+    end
+
+    it 'raises an error if the assertion is wrong' do
+      expect { history.assert_balance(:brain, '0.44') }.to raise_error \
+        'Expected brain balance of 0.44, got 0.01.  Difference: -0.43'
+    end
+  end
 end
