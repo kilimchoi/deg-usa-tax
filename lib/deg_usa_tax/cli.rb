@@ -82,8 +82,15 @@ module DegUsaTax
 
       lots_by_bucket.keys.sort.each do |bucket|
         output.puts "%4d, %s" % [bucket[0], %w{short long}[bucket[1]]]
+        format = "%13.8f, %10s, %10s, %7.2f, %7.2f, %7.2f"
+        total_format = "                                Total: %7.2f, %7.2f, %7.2f"
+        total_purchase_price = 0
+        total_sale_price = 0
         lots_by_bucket[bucket].each do |lot|
-          puts "%s, %s, %7.2f, %7.2f, %7.2f" % [
+          total_purchase_price += lot.purchase_price
+          total_sale_price += lot.sale_price
+          puts format % [
+            lot.amount,
             lot.purchase.date,
             lot.sale.date,
             lot.sale_price,
@@ -91,6 +98,11 @@ module DegUsaTax
             lot.sale_price - lot.purchase_price,
           ]
         end
+        puts total_format % [
+          total_purchase_price,
+          total_sale_price,
+          total_sale_price - total_purchase_price,
+        ]
       end
     end
 
