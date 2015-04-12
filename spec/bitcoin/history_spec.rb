@@ -152,4 +152,23 @@ describe DegUsaTax::Bitcoin::History do
       expect(tx.price).to eq BigDecimal('2.04')
     end
   end
+
+  describe 'income_btc' do
+    before do
+      allow(lot_tracker).to receive(:add_transaction) { |tx| @tx = tx }
+      history.create_wallet :brain
+      history.income_btc Date.new(2014), '0.01', '2.04', :brain
+    end
+
+    it 'adds the income to the wallet' do
+      expect(history.wallet(:brain).balance).to eq BigDecimal('0.01')
+    end
+
+    it 'adds a purchase transaction' do
+      expect(@tx.date).to eq Date.new(2014)
+      expect(@tx.type).to eq :purchase
+      expect(@tx.amount).to eq BigDecimal('0.01')
+      expect(@tx.price).to eq BigDecimal('2.04')
+    end
+  end
 end

@@ -113,14 +113,21 @@ module DegUsaTax
       end
 
       def income_btc(date, amount_btc, market_value_usd, wallet, opts = {})
-        date = normalize_date(date)
-        amount_btc = normalize_positive_btc(amount_btc)
-        market_value_usd = normalize_positive_usd(market_value_usd)
+        date = DegUsaTax.normalize_date(date)
+        amount_btc = Bitcoin.normalize_positive_bitcoin(amount_btc)
+        market_value_usd = DegUsaTax.normalize_nonnegative_wholepenny_bigdecimal(market_value_usd)
         wallet = normalize_wallet(wallet)
 
         wallet.balance += amount_btc
 
-        $tracker.new_income_of_bitcoin(date, amount_btc, market_value_usd)
+        valid_keys = [:for, :txid]
+        invalid_keys = opts.keys - valid_keys
+        if !invalid_keys.empty?
+          raise ArgumentError, "Invalid keys: #{invalid_keys.join(', ')}"
+        end
+
+        transaction = Transaction.new(date, :purchase, amount_btc, market_value_usd)
+        @lot_tracker.add_transaction transaction
       end
 
       def assert_equal(expected, actual)
