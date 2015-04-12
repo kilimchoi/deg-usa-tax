@@ -2,6 +2,8 @@ require 'deg_usa_tax'
 
 module DegUsaTax
   class CLI
+    attr_reader :output, :error_output
+
     def initialize(args, output, error_output)
       @args = args
       @output = output
@@ -46,6 +48,23 @@ module DegUsaTax
       # things inside the history object.
       history_data = File.read(filename)
       history.instance_eval history_data
+      history
     end
+
+    def report_bitcoin_history(history)
+      report_wallets(history.wallets.values)
+    end
+
+    def report_wallets(wallets)
+      wallets = wallets.sort_by { |w| -w.balance }
+      total_bitcoin = wallets.map(&:balance).inject(0, :+)
+
+      output.puts 'Your bitcoins:'
+      wallets.each do |wallet|
+        output.puts '%20s %13.8f' % [wallet.name, wallet.balance]
+      end
+      output.puts '%20s %13.8f' % ["TOTAL", total_bitcoin]
+    end
+
   end
 end
