@@ -83,16 +83,13 @@ module DegUsaTax
         source_wallet.balance -= (amount_btc + fee)
         dest_wallet.balance += amount_btc
 
-        if !fee.zero?
-          transaction = Transaction.new(date, :donation, fee, 0)
-          @lot_tracker.add_transaction(transaction)
-        end
+        add_fee_if_needed(date, fee)
       end
 
       def purchase_with_btc(date, amount_btc, market_value_usd, wallet, opts = {})
-        date = normalize_date(date)
-        amount_btc = normalize_positive_btc(amount_btc)
-        market_value_usd = normalize_positive_usd(market_value_usd)
+        date = DegUsaTax.normalize_date(date)
+        amount_btc = Bitcoin.normalize_positive_bitcoin(amount_btc)
+        market_value_usd = DegUsaTax.normalize_nonnegative_wholepenny_bigdecimal(market_value_usd)
         wallet = normalize_wallet(wallet)
 
         valid_keys = [:for, :fee, :txid]
@@ -101,7 +98,7 @@ module DegUsaTax
           raise ArgumentError, "Invalid keys: #{invalid_keys.join(', ')}"
         end
 
-        fee = normalize_nonneg_btc(opts.fetch(:fee, 0))
+        fee = Bitcoin.normalize_nonnegative_bitcoin(opts.fetch(:fee, 0))
 
         if wallet.balance < amount_btc + fee
           raise "Wallet only has #{wallet.balance}, cannot spend #{amount_btc} + #{fee}."
@@ -109,8 +106,10 @@ module DegUsaTax
 
         wallet.balance -= (amount_btc + fee)
 
-        $tracker.new_fee(date, fee)
-        $tracker.new_purchase_with_bitcoin(date, amount_btc, market_value_usd)
+        add_fee_if_needed(date, fee)
+
+        transaction = Transaction.new(date, :sale, amount_btc, market_value_usd)
+        @lot_tracker.add_transaction(transaction)
       end
 
       def income_btc(date, amount_btc, market_value_usd, wallet, opts = {})
@@ -148,6 +147,13 @@ module DegUsaTax
         when Symbol then @wallets.fetch(wallet)
         when Wallet then wallet
         else raise ArgumentError, "Not a wallet: #{wallet.inspect}"
+        end
+      end
+
+      def add_fee_if_needed(date, fee)
+        if !fee.zero?
+          transaction = Transaction.new(date, :donation, fee, 0)
+          @lot_tracker.add_transaction(transaction)
         end
       end
     end

@@ -120,4 +120,36 @@ describe DegUsaTax::Bitcoin::History do
       end
     end
   end
+
+  describe 'purchase_with_btc' do
+    before do
+      @txs = []
+      allow(lot_tracker).to receive(:add_transaction) { |tx| @txs << tx }
+      history.create_wallet :brain
+      history.buy_btc_with_usd Date.new(2013), '1.0', '120.00', :brain,
+        txid: '1e43f56893e1c2edac86ca25ce46862dd5e664849aa866cdad5a92e4c562a86e'
+      @txs = []
+      history.purchase_with_btc Date.new(2014), '0.01', '2.04', :brain, fee: '0.0005'
+    end
+
+    it 'deducts the amount and fee from the wallet' do
+      expect(history.wallet(:brain).balance).to eq BigDecimal('0.9895')
+    end
+
+    it 'makes a transaction for the fee first' do
+      tx = @txs[0]
+      expect(tx.date).to eq Date.new(2014)
+      expect(tx.type).to eq :donation
+      expect(tx.amount).to eq BigDecimal('0.0005')
+      expect(tx.price).to eq 0
+    end
+
+    it 'make a transaction for the purchase second' do
+      tx = @txs[1]
+      expect(tx.date).to eq Date.new(2014)
+      expect(tx.type).to eq :sale
+      expect(tx.amount).to eq BigDecimal('0.01')
+      expect(tx.price).to eq BigDecimal('2.04')
+    end
+  end
 end
