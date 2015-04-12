@@ -99,8 +99,8 @@ module DegUsaTax
           ]
         end
         puts total_format % [
-          total_purchase_price,
           total_sale_price,
+          total_purchase_price,
           total_sale_price - total_purchase_price,
         ]
       end
