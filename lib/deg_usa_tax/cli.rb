@@ -1,3 +1,5 @@
+# TODO: organize this code better and add tests for it
+
 require 'deg_usa_tax'
 
 module DegUsaTax
@@ -53,6 +55,12 @@ module DegUsaTax
 
     def report_bitcoin_history(history)
       report_wallets(history.wallets.values)
+      raw_lots = history.lot_tracker.lots
+      raw_lots.each do |lot|
+        raise "wtf" if lot.amount.zero?
+      end
+      lots = LotPricer.price_lots(raw_lots)
+      report_capital_gains(lots)
     end
 
     def report_wallets(wallets)
@@ -64,6 +72,42 @@ module DegUsaTax
         output.puts '%20s %13.8f' % [wallet.name, wallet.balance]
       end
       output.puts '%20s %13.8f' % ["TOTAL", total_bitcoin]
+      output.puts
+    end
+
+    # Report capital gains in a format that lets them get reported easily
+    # on form 8949.
+    def report_capital_gains(lots)
+      # filter out the donations
+      lots = lots.reject { |l| l.sale.type == :donation }
+
+      # put lots into buckets
+      lots_by_bucket = lots.group_by { |l| lot_bucket(l) }
+
+      lots_by_bucket.keys.sort.each do |bucket|
+        output.puts "%4d, %s" % [bucket[0], %w{short long}[bucket[1]]]
+        lots_by_bucket[bucket].each do |lot|
+          puts "%s, %s, %7.2f, %7.2f, %7.2f" % [
+            lot.purchase.date,
+            lot.sale.date,
+            lot.sale_price,
+            lot.purchase_price,
+            lot.sale_price - lot.purchase_price,
+          ]
+        end
+      end
+    end
+
+    def short_term?(lot)
+      (lot.sale.date - lot.purchase.date).to_i < 365
+    end
+
+    def lot_bucket(lot)
+      [tax_year(lot), short_term?(lot) ? 0 : 1].freeze
+    end
+
+    def tax_year(lot)
+      lot.sale.date.year
     end
 
   end

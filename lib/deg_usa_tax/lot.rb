@@ -12,7 +12,7 @@ class Lot
     end
 
     if sale_price
-      @sale_price = DegUsaTax.normalize_positive_bigdecimal(sale_price)
+      @sale_price = DegUsaTax.normalize_nonnegative_bigdecimal(sale_price)
     end
   end
 

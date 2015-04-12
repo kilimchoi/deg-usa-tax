@@ -6,6 +6,7 @@ module DegUsaTax
       include OptionChecker
 
       attr_reader :wallets
+      attr_reader :lot_tracker
 
       def initialize(opts = {})
         @lot_tracker = opts.fetch(:lot_tracker) { FifoLotFinder.new }
