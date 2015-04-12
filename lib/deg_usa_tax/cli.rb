@@ -39,6 +39,11 @@ module DegUsaTax
 
     def bitcoin_history_from_file(filename)
       history = Bitcoin::History.new
+
+      # TODO: do this in a better way without instance_eval; we don't
+      # get good stack traces from inside the eval in Ruby 2.1.5 and
+      # we don't want the DSL to be able to access all the private
+      # things inside the history object.
       history_data = File.read(filename)
       history.instance_eval history_data
     end

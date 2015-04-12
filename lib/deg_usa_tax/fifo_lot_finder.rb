@@ -22,8 +22,8 @@ module DegUsaTax
       case transaction.type
       when :purchase
         add_purchase(transaction)
-      when :sale
-        add_sale(transaction)
+      when :sale, :donation
+        add_sale_or_donation(transaction)
       else
         raise "Unrecognized transaction type: #{transaction.type}"
       end
@@ -38,7 +38,7 @@ module DegUsaTax
       }
     end
 
-    def add_sale(sale)
+    def add_sale_or_donation(sale)
       unaccounted_amount = sale.amount
       while unaccounted_amount > 0
         purchase_info = @unmatched_purchase_infos.first

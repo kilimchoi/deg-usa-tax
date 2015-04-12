@@ -1,3 +1,4 @@
+# TODO: move into DegUsaTax module
 class Lot
   attr_reader :amount, :purchase, :sale, :purchase_price, :sale_price
 

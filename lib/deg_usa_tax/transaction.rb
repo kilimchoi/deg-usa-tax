@@ -1,3 +1,4 @@
+# TODO: move into DegUsaTax module
 class Transaction
   attr_reader :date, :type, :amount, :price
 
