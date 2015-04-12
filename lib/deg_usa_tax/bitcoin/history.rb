@@ -3,6 +3,8 @@ module DegUsaTax
     # This class keeps track of your entire history with Bitcoin.
     # It helps prepare taxes and also just check where your Bitcoins are.
     class History
+      include OptionChecker
+
       attr_reader :wallets
 
       def initialize(opts)
@@ -24,6 +26,8 @@ module DegUsaTax
         amount_usd = DegUsaTax.normalize_nonnegative_wholepenny_bigdecimal(amount_usd)
         wallet = normalize_wallet(wallet)
 
+        check_opts opts, [:txid]
+
         unless wallet.off_chain?
           # TODO: do something with the txid provided by the user
         end
@@ -39,11 +43,7 @@ module DegUsaTax
         amount_btc = Bitcoin.normalize_positive_bitcoin(amount_btc)
         wallet = normalize_wallet(wallet)
 
-        valid_keys = [:for, :txid, :fee]
-        invalid_keys = opts.keys - valid_keys
-        if !invalid_keys.empty?
-          raise ArgumentError, "Invalid keys: #{invalid_keys.join(', ')}"
-        end
+        check_opts opts, [:for, :txid, :fee]
 
         # TODO: do something with the txid
 
@@ -64,11 +64,7 @@ module DegUsaTax
         amount_btc = Bitcoin.normalize_positive_bitcoin(amount_btc)
         source_wallet = normalize_wallet(source_wallet)
 
-        valid_keys = [:fee, :txid, :to]
-        invalid_keys = opts.keys - valid_keys
-        if !invalid_keys.empty?
-          raise ArgumentError, "Invalid keys: #{invalid_keys.inspect}"
-        end
+        check_opts opts, [:fee, :txid, :to]
 
         fee = Bitcoin.normalize_nonnegative_bitcoin(opts.fetch(:fee, 0))
         dest_wallet = normalize_wallet(opts.fetch(:to))
@@ -92,11 +88,7 @@ module DegUsaTax
         market_value_usd = DegUsaTax.normalize_nonnegative_wholepenny_bigdecimal(market_value_usd)
         wallet = normalize_wallet(wallet)
 
-        valid_keys = [:for, :fee, :txid]
-        invalid_keys = opts.keys - valid_keys
-        if !invalid_keys.empty?
-          raise ArgumentError, "Invalid keys: #{invalid_keys.join(', ')}"
-        end
+        check_opts opts, [:for, :fee, :txid]
 
         fee = Bitcoin.normalize_nonnegative_bitcoin(opts.fetch(:fee, 0))
 
@@ -120,11 +112,7 @@ module DegUsaTax
 
         wallet.balance += amount_btc
 
-        valid_keys = [:for, :txid]
-        invalid_keys = opts.keys - valid_keys
-        if !invalid_keys.empty?
-          raise ArgumentError, "Invalid keys: #{invalid_keys.join(', ')}"
-        end
+        check_opts opts, [:for, :txid]
 
         transaction = Transaction.new(date, :purchase, amount_btc, market_value_usd)
         @lot_tracker.add_transaction transaction
