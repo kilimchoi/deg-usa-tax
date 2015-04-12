@@ -1,0 +1,3 @@
+#!/usr/bin/env ruby
+require 'deg_usa_tax/cli'
+exit DegUsaTax::CLI.new(ARGV, $stdout, $stderr).run

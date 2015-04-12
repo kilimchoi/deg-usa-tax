@@ -7,9 +7,14 @@ describe DegUsaTax do
       expect(DegUsaTax.normalize_date(date)).to eql date
     end
 
+    it 'accepts a YYYY-MM-DD string' do
+      expect(DegUsaTax.normalize_date('2006-03-04')).to eql \
+        Date.new(2006, 3, 4)
+    end
+
     it 'rejects junk' do
       expect { DegUsaTax.normalize_date(44) }.to \
-        raise_error ArgumentError, 'expected a Date, got 44'
+        raise_error ArgumentError, 'expected a date, got 44'
     end
   end
 

@@ -14,11 +14,15 @@ require 'deg_usa_tax/bitcoin/history'
 require 'deg_usa_tax/bitcoin/wallet'
 
 module DegUsaTax
-  def self.normalize_date(date)
-    if !date.is_a?(Date)
-      raise ArgumentError, "expected a Date, got #{date.inspect}"
+  def self.normalize_date(v)
+    case v
+    when Date
+      v
+    when String
+      Date.parse(v)
+    else
+      raise ArgumentError, "expected a date, got #{v.inspect}"
     end
-    date
   end
 
   def self.normalize_bigdecimal(num)

@@ -7,8 +7,8 @@ module DegUsaTax
 
       attr_reader :wallets
 
-      def initialize(opts)
-        @lot_tracker = opts.fetch(:lot_tracker) { FifoLotTracker.new }
+      def initialize(opts = {})
+        @lot_tracker = opts.fetch(:lot_tracker) { FifoLotFinder.new }
         @wallets = {}
       end
 
