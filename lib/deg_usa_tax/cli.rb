@@ -37,7 +37,13 @@ module DegUsaTax
       end
 
       history = bitcoin_history_from_file(filename)
-      report_bitcoin_history(history)
+
+      report_wallets(history.wallets.values)
+
+      raw_lots = history.lot_tracker.lots
+      lots = LotPricer.price_lots(raw_lots)
+      report_capital_gains(lots)
+
       true
     end
 
@@ -51,16 +57,6 @@ module DegUsaTax
       history_data = File.read(filename)
       history.instance_eval history_data
       history
-    end
-
-    def report_bitcoin_history(history)
-      report_wallets(history.wallets.values)
-      raw_lots = history.lot_tracker.lots
-      raw_lots.each do |lot|
-        raise "wtf" if lot.amount.zero?
-      end
-      lots = LotPricer.price_lots(raw_lots)
-      report_capital_gains(lots)
     end
 
     def report_wallets(wallets)
