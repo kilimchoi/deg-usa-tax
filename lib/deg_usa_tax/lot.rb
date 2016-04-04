@@ -8,7 +8,7 @@ class Lot
     @sale = DegUsaTax.normalize_transaction(sale)
 
     if purchase_price
-      @purchase_price = DegUsaTax.normalize_positive_bigdecimal(purchase_price)
+      @purchase_price = DegUsaTax.normalize_nonnegative_bigdecimal(purchase_price)
     end
 
     if sale_price
