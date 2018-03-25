@@ -50,28 +50,36 @@ module DegUsaTax
         wallet.add_balance(symbol, amount_crypto)
       end
 
-      def donate_btc(date, amount_btc, wallet, opts = {})
+      def donate_btc(date, amount, wallet, opts = {})
+        donate_crypto(date, :btc, amount, wallet, opts)
+      end
+
+      def donate_crypto(date, symbol, amount, wallet, opts = {})
         date = DegUsaTax.normalize_date(date)
-        amount_btc = Bitcoin.normalize_positive_bitcoin(amount_btc)
+        amount = Bitcoin.normalize_positive_bitcoin(amount)
         wallet = normalize_wallet(wallet)
 
         check_opts opts, [:for, :txid, :fee]
 
         fee = Bitcoin.normalize_nonnegative_bitcoin(opts.fetch(:fee, 0))
 
-        if wallet.balance(:btc) < amount_btc + fee
-          raise "Wallet only has #{wallet.balance}, cannot donate #{amount_btc} + #{fee}."
+        if wallet.balance(symbol) < amount + fee
+          raise "Wallet only has #{wallet.balance}, cannot donate #{amount} + #{fee}."
         end
 
-        wallet.add_balance :btc, -(amount_btc + fee)
+        wallet.add_balance symbol, -(amount + fee)
 
-        transaction = Transaction.new(date, :donation, amount_btc + fee, 0)
+        transaction = Transaction.new(date, :donation, amount + fee, 0)
         lot_tracker(:btc).add_transaction(transaction)
       end
 
-      def move_btc(date, amount_btc, source_wallet, opts = {})
+      def move_btc(date, amount, source_wallet, opts = {})
+        move_crypto(date, :btc, amount, source_wallet, opts)
+      end
+
+      def move_crypto(date, symbol, amount, source_wallet, opts = {})
         date = DegUsaTax.normalize_date(date)
-        amount_btc = Bitcoin.normalize_positive_bitcoin(amount_btc)
+        amount_btc = Bitcoin.normalize_positive_bitcoin(amount)
         source_wallet = normalize_wallet(source_wallet)
 
         check_opts opts, [:fee, :txid, :to]
@@ -79,20 +87,26 @@ module DegUsaTax
         fee = Bitcoin.normalize_nonnegative_bitcoin(opts.fetch(:fee, 0))
         dest_wallet = normalize_wallet(opts.fetch(:to))
 
-        if source_wallet.balance(:btc) < amount_btc + fee
-          raise "Wallet only has #{source_wallet.balance(:btc).to_s('F')}, " \
+        if source_wallet.balance(symbol) < amount_btc + fee
+          raise "Wallet only has #{source_wallet.balance(symbol).to_s('F')} " \
+                "#{symbol}, " \
                 "cannot move #{amount_btc.to_s('F')} + #{fee.to_s('F')}."
         end
 
-        source_wallet.add_balance :btc, -(amount_btc + fee)
-        dest_wallet.add_balance :btc, amount_btc
+        source_wallet.add_balance symbol, -(amount_btc + fee)
+        dest_wallet.add_balance symbol, amount_btc
 
-        add_fee_if_needed(date, :btc, fee)
+        add_fee_if_needed(date, symbol, fee)
       end
 
       def purchase_with_btc(date, amount_btc, market_value_usd, wallet, opts = {})
+        purchase_with_crypto(date, :btc, amount_btc, market_value_usd, wallet, opts)
+      end
+
+      def purchase_with_crypto(date, symbol, amount_crypto, market_value_usd,
+                               wallet, opts = {})
         date = DegUsaTax.normalize_date(date)
-        amount_btc = Bitcoin.normalize_positive_bitcoin(amount_btc)
+        amount_crypto = Bitcoin.normalize_positive_bitcoin(amount_crypto)
         market_value_usd = DegUsaTax.normalize_nonnegative_wholepenny_bigdecimal(market_value_usd)
         wallet = normalize_wallet(wallet)
 
@@ -100,33 +114,37 @@ module DegUsaTax
 
         fee = Bitcoin.normalize_nonnegative_bitcoin(opts.fetch(:fee, 0))
 
-        if wallet.balance(:btc) < amount_btc + fee
-          raise "Wallet only has #{wallet.balance(:btc)}, cannot spend #{amount_btc} + #{fee}."
+        if wallet.balance(symbol) < amount_crypto + fee
+          raise "Wallet only has #{wallet.balance(symbol)} #{symbol}, cannot spend #{amount_crypto} + #{fee}."
         end
 
-        wallet.add_balance :btc, -(amount_btc + fee)
+        wallet.add_balance symbol, -(amount_crypto + fee)
 
-        add_fee_if_needed(date, :btc, fee)
+        add_fee_if_needed(date, symbol, fee)
 
-        transaction = Transaction.new(date, :sale, amount_btc, market_value_usd)
-        lot_tracker(:btc).add_transaction(transaction)
+        transaction = Transaction.new(date, :sale, amount_crypto, market_value_usd)
+        lot_tracker(symbol).add_transaction(transaction)
       end
 
       def income_btc(date, amount_btc, market_value_usd, wallet, opts = {})
+        income_crypto(date, :btc, amount_btc, market_value_usd, wallet, opts = {})
+      end
+
+      def income_crypto(date, symbol, amount_crypto, market_value_usd, wallet, opts = {})
         date = DegUsaTax.normalize_date(date)
-        amount_btc = Bitcoin.normalize_positive_bitcoin(amount_btc)
+        amount_crypto = Bitcoin.normalize_positive_bitcoin(amount_crypto)
         market_value_usd = DegUsaTax.normalize_nonnegative_wholepenny_bigdecimal(market_value_usd)
         wallet = normalize_wallet(wallet)
 
-        wallet.add_balance :btc, amount_btc
+        wallet.add_balance symbol, amount_crypto
 
-        check_opts opts, [:for, :txid]
+        check_opts opts, [:for, :txid, :desc]
 
-        desc = "income btc"
+        desc = opts.fetch(:desc) { "income #{symbol}" }
         record_income(date, market_value_usd, desc)
 
-        transaction = Transaction.new(date, :purchase, amount_btc, market_value_usd)
-        lot_tracker(:btc).add_transaction transaction
+        transaction = Transaction.new(date, :purchase, amount_crypto, market_value_usd)
+        lot_tracker(symbol).add_transaction transaction
       end
 
       # Note: Would be nice to have an option for excluding certain wallets if
@@ -142,14 +160,16 @@ module DegUsaTax
           balance_orig = wallet.balance(symbol_orig)
           next if balance_orig.zero?
 
+          # Assume this is a 1 to 1 fork.
+          balance_fork = balance_orig
+
           # Calculate income, rounded to nearest penny.
-          income_usd = (unit_price_usd * balance_orig).round(2)
+          income_usd = (unit_price_usd * balance_fork).round(2)
 
           desc = "fork: #{symbol_orig}->#{symbol_fork}, #{wallet.name}"
-          record_income(date, income_usd, desc)
 
-          # Use that new income to buy crypto.
-          buy_crypto_with_usd(date, symbol_fork, balance_orig, income_usd, wallet)
+          income_crypto(date, symbol_fork, balance_fork, income_usd,
+                        wallet, desc: desc)
         end
       end
 

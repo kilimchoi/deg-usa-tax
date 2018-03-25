@@ -123,7 +123,7 @@ describe DegUsaTax::Bitcoin::History do
         expect do
           history.move_btc Date.new(2014), '0.6', :brain, to: :coinbase, fee: '0.0001',
            txid: '1e43f56893e1c2edac86ca25ce46862dd5e664849aa866cdad5a92e4c562a86e'
-        end.to raise_error "Wallet only has 0.01, cannot move 0.6 + 0.0001."
+        end.to raise_error "Wallet only has 0.01 btc, cannot move 0.6 + 0.0001."
       end
     end
   end
