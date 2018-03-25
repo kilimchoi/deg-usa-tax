@@ -188,7 +188,7 @@ describe DegUsaTax::Bitcoin::History do
       history.income_btc Date.new(2014), '0.01', '2.04', :brain
       history.create_wallet :phone
       history.income_btc Date.new(2014), '0.02', '4.08', :phone
-      history.currency_fork '2017-08-01', :btc, :bch, initial_usd_price: '266.00'
+      history.currency_fork '2017-08-01', :btc, :bch, initial_usd_price: '266.01'
     end
 
     it 'adds to the balance of the fork currency' do
