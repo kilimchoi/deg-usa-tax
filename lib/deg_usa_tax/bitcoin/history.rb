@@ -3,10 +3,33 @@
 
 module DegUsaTax
   module Bitcoin
+    module CommandsBtc
+      def buy_btc_with_usd(date, amount_btc, amount_usd, wallet, opts = {})
+        buy_crypto_with_usd(date, :btc, amount_btc, amount_usd, wallet, opts)
+      end
+
+      def donate_btc(date, amount, wallet, opts = {})
+        donate_crypto(date, :btc, amount, wallet, opts)
+      end
+
+      def move_btc(date, amount, source_wallet, opts = {})
+        move_crypto(date, :btc, amount, source_wallet, opts)
+      end
+
+      def purchase_with_btc(date, amount_btc, market_value_usd, wallet, opts = {})
+        purchase_with_crypto(date, :btc, amount_btc, market_value_usd, wallet, opts)
+      end
+
+      def income_btc(date, amount_btc, market_value_usd, wallet, opts = {})
+        income_crypto(date, :btc, amount_btc, market_value_usd, wallet, opts = {})
+      end
+    end
+
     # This class keeps track of your entire history with Bitcoin.
     # It helps prepare taxes and also just check where your Bitcoins are.
     class History
       include OptionChecker
+      include CommandsBtc
 
       attr_reader :wallets, :incomes
 
@@ -36,26 +59,6 @@ module DegUsaTax
 
       def wallet(name)
         @wallets.fetch(name)
-      end
-
-      def buy_btc_with_usd(date, amount_btc, amount_usd, wallet, opts = {})
-        buy_crypto_with_usd(date, :btc, amount_btc, amount_usd, wallet, opts)
-      end
-
-      def donate_btc(date, amount, wallet, opts = {})
-        donate_crypto(date, :btc, amount, wallet, opts)
-      end
-
-      def move_btc(date, amount, source_wallet, opts = {})
-        move_crypto(date, :btc, amount, source_wallet, opts)
-      end
-
-      def purchase_with_btc(date, amount_btc, market_value_usd, wallet, opts = {})
-        purchase_with_crypto(date, :btc, amount_btc, market_value_usd, wallet, opts)
-      end
-
-      def income_btc(date, amount_btc, market_value_usd, wallet, opts = {})
-        income_crypto(date, :btc, amount_btc, market_value_usd, wallet, opts = {})
       end
 
       def buy_crypto_with_usd(date, symbol, amount_crypto, amount_usd, wallet, opts = {})
