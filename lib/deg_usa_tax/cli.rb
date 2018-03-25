@@ -21,33 +21,39 @@ module DegUsaTax
 
       command = @args[0]
       case command
-      when 'btc'
-        return run_btc(@args[1, @args.length])
+      when 'btc', 'crypto'
+        return run_crypto(@args[1, @args.length])
       else
         @error_output.puts "Unrecognized command #{command}"
         return false
       end
     end
 
-    def run_btc(args)
+    def run_crypto(args)
       filename = args[0]
       if filename.nil?
         @error_output.puts "No filename given."
         return false
       end
 
-      history = bitcoin_history_from_file(filename)
+      history = crypto_history_from_file(filename)
 
-      report_wallets(history.wallets.values)
+      history.symbols.each do |symbol|
+        report_wallets(symbol, history.wallets.values)
+      end
 
-      raw_lots = history.lot_tracker.lots
-      lots = LotPricer.price_lots(raw_lots)
-      report_capital_gains(lots)
+      history.symbols.each do |symbol|
+        raw_lots = history.lot_tracker(symbol).lots
+        lots = LotPricer.price_lots(raw_lots)
+        report_capital_gains(symbol, lots)
+      end
+
+      report_incomes(history.incomes)
 
       true
     end
 
-    def bitcoin_history_from_file(filename)
+    def crypto_history_from_file(filename)
       history = Bitcoin::History.new
 
       # TODO: do this in a better way without instance_eval; we don't
@@ -59,21 +65,25 @@ module DegUsaTax
       history
     end
 
-    def report_wallets(wallets)
-      wallets = wallets.sort_by { |w| -w.balance }
-      total_bitcoin = wallets.map(&:balance).inject(0, :+)
-
-      output.puts 'Your bitcoins:'
-      wallets.each do |wallet|
-        output.puts '%20s %13.8f' % [wallet.name, wallet.balance]
+    def report_wallets(symbol, wallets)
+      output.puts "Your #{symbol}:"
+      total = 0
+      sorted = wallets.sort_by { |w| -w.balance(symbol) }
+      sorted.each do |wallet|
+        bal = wallet.balance(symbol)
+        next if bal.zero?
+        total += bal
+        output.puts '%20s %13.8f' % [wallet.name, bal]
       end
-      output.puts '%20s %13.8f' % ["TOTAL", total_bitcoin]
+      output.puts '%20s %13.8f' % ["TOTAL", total]
       output.puts
     end
 
     # Report capital gains in a format that lets them get reported easily
     # on form 8949.
-    def report_capital_gains(lots)
+    def report_capital_gains(symbol, lots)
+      puts "Your #{symbol} capital gains:"
+
       # filter out the donations
       lots = lots.reject { |l| l.sale.type == :donation }
 
@@ -104,6 +114,15 @@ module DegUsaTax
           total_sale_price - total_purchase_price,
         ]
       end
+      puts
+    end
+
+    def report_incomes(incomes)
+      puts "Your normal incomes:"
+      incomes.each do |i|
+        puts "  %-10s %8.2f  \"%s\"" % [i.date, i.amount_usd, i.desc]
+      end
+      puts
     end
 
     def short_term?(lot)

@@ -30,6 +30,10 @@ module DegUsaTax
         @balance_map[symbol] ||= 0
         @balance_map[symbol] += amount
       end
+
+      def symbols
+        @balance_map.keys
+      end
     end
   end
 end

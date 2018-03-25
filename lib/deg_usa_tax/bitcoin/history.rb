@@ -61,6 +61,10 @@ module DegUsaTax
         @wallets.fetch(name)
       end
 
+      def symbols
+        @wallets.values.flat_map(&:symbols).uniq.sort
+      end
+
       def buy_crypto_with_usd(date, symbol, amount_crypto, amount_usd, wallet, opts = {})
         amount_crypto = Bitcoin.normalize_positive_bitcoin(amount_crypto)
         amount_usd = DegUsaTax.normalize_nonnegative_wholepenny_bigdecimal(amount_usd)
