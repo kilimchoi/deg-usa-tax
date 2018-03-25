@@ -211,7 +211,7 @@ describe DegUsaTax::Bitcoin::History do
     end
 
     it 'adds income', pending: true do
-
+      raise
     end
   end
 

@@ -134,9 +134,9 @@ module DegUsaTax
           balance_orig = wallet.balance(symbol_orig)
           next if balance_orig.zero?
 
-          # Record income.
-          income_usd = unit_price_usd * balance_orig
-          raise "Bad type" if !income_usd.is_a?(BigDecimal)
+          # Calculate income, rounded to nearest penny.
+          income_usd = (unit_price_usd * balance_orig).round(2)
+
           # TODO: actually record it
 
           # Use that new income to buy crypto.
