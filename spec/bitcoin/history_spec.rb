@@ -180,11 +180,39 @@ describe DegUsaTax::Bitcoin::History do
   end
 
   describe 'currency_fork' do
-    next # TODO
     before do
-      allow(lot_tracker).to receive(:add_transaction) { |tx| @tx = tx }
+      @txs = []
+      allow(lot_tracker).to receive(:add_transaction) { }
+      allow(lot_tracker_bch).to receive(:add_transaction) { |tx| @txs << tx }
+      history.create_wallet :brain
+      history.income_btc Date.new(2014), '0.01', '2.04', :brain
+      history.create_wallet :phone
+      history.income_btc Date.new(2014), '0.02', '4.08', :phone
+      history.currency_fork '2017-08-01', :btc, :bch, initial_usd_price: '266.00'
     end
-    currency_fork '2017-08-01', :btc, :bch, initial_usd_value: '266.00'
+
+    it 'adds to the balance of the fork currency' do
+      history.assert_balance :brain, btc: '0.01', bch: '0.01'
+      history.assert_balance :phone, btc: '0.02', bch: '0.02'
+    end
+
+    it 'adds purchase transactions' do
+      expect(@txs.size).to eq 2
+
+      expect(@txs[0].date).to eq Date.new(2017, 8, 1)
+      expect(@txs[0].type).to eq :purchase
+      expect(@txs[0].amount).to eq BigDecimal('0.01')
+      expect(@txs[0].price).to eq BigDecimal('2.66')
+
+      expect(@txs[1].date).to eq Date.new(2017, 8, 1)
+      expect(@txs[1].type).to eq :purchase
+      expect(@txs[1].amount).to eq BigDecimal('0.02')
+      expect(@txs[1].price).to eq BigDecimal('5.32')
+    end
+
+    it 'adds income', pending: true do
+
+    end
   end
 
   describe 'assert_balance' do

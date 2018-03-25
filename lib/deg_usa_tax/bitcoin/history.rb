@@ -31,20 +31,18 @@ module DegUsaTax
       end
 
       def buy_btc_with_usd(date, amount_btc, amount_usd, wallet, opts = {})
-        amount_btc = Bitcoin.normalize_positive_bitcoin(amount_btc)
+        buy_crypto_with_usd(date, :btc, amount_btc, amount_usd, wallet, opts)
+      end
+
+      def buy_crypto_with_usd(date, symbol, amount_crypto, amount_usd, wallet, opts = {})
+        amount_crypto = Bitcoin.normalize_positive_bitcoin(amount_crypto)
         amount_usd = DegUsaTax.normalize_nonnegative_wholepenny_bigdecimal(amount_usd)
         wallet = normalize_wallet(wallet)
-
         check_opts opts, [:txid]
 
-        unless wallet.off_chain?
-          # TODO: do something with the txid provided by the user
-        end
-
-        transaction = Transaction.new(date, :purchase, amount_btc, amount_usd)
-        lot_tracker(:btc).add_transaction(transaction)
-
-        wallet.add_balance(:btc, amount_btc)
+        transaction = Transaction.new(date, :purchase, amount_crypto, amount_usd)
+        lot_tracker(symbol).add_transaction(transaction)
+        wallet.add_balance(symbol, amount_crypto)
       end
 
       def donate_btc(date, amount_btc, wallet, opts = {})
@@ -53,8 +51,6 @@ module DegUsaTax
         wallet = normalize_wallet(wallet)
 
         check_opts opts, [:for, :txid, :fee]
-
-        # TODO: do something with the txid
 
         fee = Bitcoin.normalize_nonnegative_bitcoin(opts.fetch(:fee, 0))
 
@@ -77,8 +73,6 @@ module DegUsaTax
 
         fee = Bitcoin.normalize_nonnegative_bitcoin(opts.fetch(:fee, 0))
         dest_wallet = normalize_wallet(opts.fetch(:to))
-
-        # TODO: do something with the txid
 
         if source_wallet.balance(:btc) < amount_btc + fee
           raise "Wallet only has #{source_wallet.balance(:btc).to_s('F')}, " \
@@ -127,9 +121,26 @@ module DegUsaTax
         lot_tracker(:btc).add_transaction transaction
       end
 
-      def assert_equal(expected, actual)
-        if expected != actual
-          raise "Expected #{expected}, got #{actual}."
+      # Note: Would be nice to have an option for excluding certain wallets if
+      # those wallets don't let you access the forked coins.
+      def currency_fork(date, symbol_orig, symbol_fork, opts = {})
+        date = DegUsaTax.normalize_date(date)
+        check_opts opts, [:initial_usd_price]
+        unit_price_usd = DegUsaTax.normalize_nonnegative_wholepenny_bigdecimal(
+          opts.fetch(:initial_usd_price))
+
+        # Update the balances of wallets holding the original currency.
+        @wallets.each_value do |wallet|
+          balance_orig = wallet.balance(symbol_orig)
+          next if balance_orig.zero?
+
+          # Record income.
+          income_usd = unit_price_usd * balance_orig
+          raise "Bad type" if !income_usd.is_a?(BigDecimal)
+          # TODO: actually record it
+
+          # Use that new income to buy crypto.
+          buy_crypto_with_usd(date, symbol_fork, balance_orig, income_usd, wallet)
         end
       end
 
