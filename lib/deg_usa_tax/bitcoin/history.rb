@@ -6,11 +6,19 @@ module DegUsaTax
       include OptionChecker
 
       attr_reader :wallets
-      attr_reader :lot_tracker
 
       def initialize(opts = {})
-        @lot_tracker = opts.fetch(:lot_tracker) { FifoLotFinder.new }
+        @lot_tracker_map = {}
         @wallets = {}
+      end
+
+      # For dependency injection in unit tests.
+      def set_lot_tracker(symbol, tracker)
+        @lot_tracker_map[symbol] = tracker
+      end
+
+      def lot_tracker(symbol)
+        @lot_tracker_map[symbol] ||= FifoLotFinder.new
       end
 
       def create_wallet(name, opts = {})
@@ -34,7 +42,7 @@ module DegUsaTax
         end
 
         transaction = Transaction.new(date, :purchase, amount_btc, amount_usd)
-        @lot_tracker.add_transaction(transaction)
+        lot_tracker(:btc).add_transaction(transaction)
 
         wallet.add_balance(:btc, amount_btc)
       end
@@ -57,7 +65,7 @@ module DegUsaTax
         wallet.add_balance :btc, -(amount_btc + fee)
 
         transaction = Transaction.new(date, :donation, amount_btc + fee, 0)
-        @lot_tracker.add_transaction(transaction)
+        lot_tracker(:btc).add_transaction(transaction)
       end
 
       def move_btc(date, amount_btc, source_wallet, opts = {})
@@ -80,7 +88,7 @@ module DegUsaTax
         source_wallet.add_balance :btc, -(amount_btc + fee)
         dest_wallet.add_balance :btc, amount_btc
 
-        add_fee_if_needed(date, fee)
+        add_fee_if_needed(date, :btc, fee)
       end
 
       def purchase_with_btc(date, amount_btc, market_value_usd, wallet, opts = {})
@@ -99,10 +107,10 @@ module DegUsaTax
 
         wallet.add_balance :btc, -(amount_btc + fee)
 
-        add_fee_if_needed(date, fee)
+        add_fee_if_needed(date, :btc, fee)
 
         transaction = Transaction.new(date, :sale, amount_btc, market_value_usd)
-        @lot_tracker.add_transaction(transaction)
+        lot_tracker(:btc).add_transaction(transaction)
       end
 
       def income_btc(date, amount_btc, market_value_usd, wallet, opts = {})
@@ -116,7 +124,7 @@ module DegUsaTax
         check_opts opts, [:for, :txid]
 
         transaction = Transaction.new(date, :purchase, amount_btc, market_value_usd)
-        @lot_tracker.add_transaction transaction
+        lot_tracker(:btc).add_transaction transaction
       end
 
       def assert_equal(expected, actual)
@@ -152,10 +160,10 @@ module DegUsaTax
         end
       end
 
-      def add_fee_if_needed(date, fee)
+      def add_fee_if_needed(date, symbol, fee)
         if !fee.zero?
           transaction = Transaction.new(date, :donation, fee, 0)
-          @lot_tracker.add_transaction(transaction)
+          lot_tracker(symbol).add_transaction(transaction)
         end
       end
     end

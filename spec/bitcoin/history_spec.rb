@@ -5,8 +5,15 @@ describe DegUsaTax::Bitcoin::History do
     double('lot_tracker')
   end
 
+  let(:lot_tracker_bch) do
+    double('lot_tracker_bch')
+  end
+
   subject(:history) do
-    described_class.new lot_tracker: lot_tracker
+    h = described_class.new
+    h.set_lot_tracker(:btc, lot_tracker)
+    h.set_lot_tracker(:bch, lot_tracker_bch)
+    h
   end
 
   describe 'create_wallet' do
@@ -170,6 +177,14 @@ describe DegUsaTax::Bitcoin::History do
       expect(@tx.amount).to eq BigDecimal('0.01')
       expect(@tx.price).to eq BigDecimal('2.04')
     end
+  end
+
+  describe 'currency_fork' do
+    next # TODO
+    before do
+      allow(lot_tracker).to receive(:add_transaction) { |tx| @tx = tx }
+    end
+    currency_fork '2017-08-01', :btc, :bch, initial_usd_value: '266.00'
   end
 
   describe 'assert_balance' do
