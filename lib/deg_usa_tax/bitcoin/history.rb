@@ -5,10 +5,11 @@ module DegUsaTax
     class History
       include OptionChecker
 
-      attr_reader :wallets
+      attr_reader :wallets, :incomes
 
       def initialize(opts = {})
         @lot_tracker_map = {}
+        @incomes = []
         @wallets = {}
       end
 
@@ -19,6 +20,10 @@ module DegUsaTax
 
       def lot_tracker(symbol)
         @lot_tracker_map[symbol] ||= FifoLotFinder.new
+      end
+
+      def record_income(date, amount_usd, desc)
+        @incomes << Income.new(date, amount_usd, desc)
       end
 
       def create_wallet(name, opts = {})
@@ -117,6 +122,9 @@ module DegUsaTax
 
         check_opts opts, [:for, :txid]
 
+        desc = "income btc"
+        record_income(date, market_value_usd, desc)
+
         transaction = Transaction.new(date, :purchase, amount_btc, market_value_usd)
         lot_tracker(:btc).add_transaction transaction
       end
@@ -137,7 +145,8 @@ module DegUsaTax
           # Calculate income, rounded to nearest penny.
           income_usd = (unit_price_usd * balance_orig).round(2)
 
-          # TODO: actually record it
+          desc = "fork: #{symbol_orig}->#{symbol_fork}, #{wallet.name}"
+          record_income(date, income_usd, desc)
 
           # Use that new income to buy crypto.
           buy_crypto_with_usd(date, symbol_fork, balance_orig, income_usd, wallet)
