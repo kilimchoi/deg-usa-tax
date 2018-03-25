@@ -88,12 +88,12 @@ module DegUsaTax
         wallet.add_balance symbol, -(amount + fee)
 
         transaction = Transaction.new(date, :donation, amount + fee, 0)
-        lot_tracker(:btc).add_transaction(transaction)
+        lot_tracker(symbol).add_transaction(transaction)
       end
 
       def move_crypto(date, symbol, amount, source_wallet, opts = {})
         date = DegUsaTax.normalize_date(date)
-        amount_btc = Bitcoin.normalize_positive_bitcoin(amount)
+        amount = Bitcoin.normalize_positive_bitcoin(amount)
         source_wallet = normalize_wallet(source_wallet)
 
         check_opts opts, [:fee, :txid, :to]
@@ -101,14 +101,14 @@ module DegUsaTax
         fee = Bitcoin.normalize_nonnegative_bitcoin(opts.fetch(:fee, 0))
         dest_wallet = normalize_wallet(opts.fetch(:to))
 
-        if source_wallet.balance(symbol) < amount_btc + fee
+        if source_wallet.balance(symbol) < amount + fee
           raise "Wallet only has #{source_wallet.balance(symbol).to_s('F')} " \
                 "#{symbol}, " \
-                "cannot move #{amount_btc.to_s('F')} + #{fee.to_s('F')}."
+                "cannot move #{amount.to_s('F')} + #{fee.to_s('F')}."
         end
 
-        source_wallet.add_balance symbol, -(amount_btc + fee)
-        dest_wallet.add_balance symbol, amount_btc
+        source_wallet.add_balance symbol, -(amount + fee)
+        dest_wallet.add_balance symbol, amount
 
         add_fee_if_needed(date, symbol, fee)
       end
