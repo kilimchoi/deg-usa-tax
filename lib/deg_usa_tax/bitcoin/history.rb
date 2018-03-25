@@ -1,3 +1,6 @@
+# TODO: ethereum is divisible to 18 decimal places so we need to call
+# normalization functions that are specific to each crypto
+
 module DegUsaTax
   module Bitcoin
     # This class keeps track of your entire history with Bitcoin.
@@ -39,6 +42,22 @@ module DegUsaTax
         buy_crypto_with_usd(date, :btc, amount_btc, amount_usd, wallet, opts)
       end
 
+      def donate_btc(date, amount, wallet, opts = {})
+        donate_crypto(date, :btc, amount, wallet, opts)
+      end
+
+      def move_btc(date, amount, source_wallet, opts = {})
+        move_crypto(date, :btc, amount, source_wallet, opts)
+      end
+
+      def purchase_with_btc(date, amount_btc, market_value_usd, wallet, opts = {})
+        purchase_with_crypto(date, :btc, amount_btc, market_value_usd, wallet, opts)
+      end
+
+      def income_btc(date, amount_btc, market_value_usd, wallet, opts = {})
+        income_crypto(date, :btc, amount_btc, market_value_usd, wallet, opts = {})
+      end
+
       def buy_crypto_with_usd(date, symbol, amount_crypto, amount_usd, wallet, opts = {})
         amount_crypto = Bitcoin.normalize_positive_bitcoin(amount_crypto)
         amount_usd = DegUsaTax.normalize_nonnegative_wholepenny_bigdecimal(amount_usd)
@@ -48,10 +67,6 @@ module DegUsaTax
         transaction = Transaction.new(date, :purchase, amount_crypto, amount_usd)
         lot_tracker(symbol).add_transaction(transaction)
         wallet.add_balance(symbol, amount_crypto)
-      end
-
-      def donate_btc(date, amount, wallet, opts = {})
-        donate_crypto(date, :btc, amount, wallet, opts)
       end
 
       def donate_crypto(date, symbol, amount, wallet, opts = {})
@@ -71,10 +86,6 @@ module DegUsaTax
 
         transaction = Transaction.new(date, :donation, amount + fee, 0)
         lot_tracker(:btc).add_transaction(transaction)
-      end
-
-      def move_btc(date, amount, source_wallet, opts = {})
-        move_crypto(date, :btc, amount, source_wallet, opts)
       end
 
       def move_crypto(date, symbol, amount, source_wallet, opts = {})
@@ -99,10 +110,6 @@ module DegUsaTax
         add_fee_if_needed(date, symbol, fee)
       end
 
-      def purchase_with_btc(date, amount_btc, market_value_usd, wallet, opts = {})
-        purchase_with_crypto(date, :btc, amount_btc, market_value_usd, wallet, opts)
-      end
-
       def purchase_with_crypto(date, symbol, amount_crypto, market_value_usd,
                                wallet, opts = {})
         date = DegUsaTax.normalize_date(date)
@@ -124,10 +131,6 @@ module DegUsaTax
 
         transaction = Transaction.new(date, :sale, amount_crypto, market_value_usd)
         lot_tracker(symbol).add_transaction(transaction)
-      end
-
-      def income_btc(date, amount_btc, market_value_usd, wallet, opts = {})
-        income_crypto(date, :btc, amount_btc, market_value_usd, wallet, opts = {})
       end
 
       def income_crypto(date, symbol, amount_crypto, market_value_usd, wallet, opts = {})
