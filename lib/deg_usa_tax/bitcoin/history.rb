@@ -36,7 +36,7 @@ module DegUsaTax
         transaction = Transaction.new(date, :purchase, amount_btc, amount_usd)
         @lot_tracker.add_transaction(transaction)
 
-        wallet.balance += amount_btc
+        wallet.add_balance(:btc, amount_btc)
       end
 
       def donate_btc(date, amount_btc, wallet, opts = {})
@@ -50,11 +50,11 @@ module DegUsaTax
 
         fee = Bitcoin.normalize_nonnegative_bitcoin(opts.fetch(:fee, 0))
 
-        if wallet.balance < amount_btc + fee
+        if wallet.balance(:btc) < amount_btc + fee
           raise "Wallet only has #{wallet.balance}, cannot donate #{amount_btc} + #{fee}."
         end
 
-        wallet.balance -= amount_btc + fee
+        wallet.add_balance :btc, -(amount_btc + fee)
 
         transaction = Transaction.new(date, :donation, amount_btc + fee, 0)
         @lot_tracker.add_transaction(transaction)
@@ -72,13 +72,13 @@ module DegUsaTax
 
         # TODO: do something with the txid
 
-        if source_wallet.balance < amount_btc + fee
-          raise "Wallet only has #{source_wallet.balance.to_s('F')}, " \
+        if source_wallet.balance(:btc) < amount_btc + fee
+          raise "Wallet only has #{source_wallet.balance(:btc).to_s('F')}, " \
                 "cannot move #{amount_btc.to_s('F')} + #{fee.to_s('F')}."
         end
 
-        source_wallet.balance -= (amount_btc + fee)
-        dest_wallet.balance += amount_btc
+        source_wallet.add_balance :btc, -(amount_btc + fee)
+        dest_wallet.add_balance :btc, amount_btc
 
         add_fee_if_needed(date, fee)
       end
@@ -93,11 +93,11 @@ module DegUsaTax
 
         fee = Bitcoin.normalize_nonnegative_bitcoin(opts.fetch(:fee, 0))
 
-        if wallet.balance < amount_btc + fee
-          raise "Wallet only has #{wallet.balance}, cannot spend #{amount_btc} + #{fee}."
+        if wallet.balance(:btc) < amount_btc + fee
+          raise "Wallet only has #{wallet.balance(:btc)}, cannot spend #{amount_btc} + #{fee}."
         end
 
-        wallet.balance -= (amount_btc + fee)
+        wallet.add_balance :btc, -(amount_btc + fee)
 
         add_fee_if_needed(date, fee)
 
@@ -111,7 +111,7 @@ module DegUsaTax
         market_value_usd = DegUsaTax.normalize_nonnegative_wholepenny_bigdecimal(market_value_usd)
         wallet = normalize_wallet(wallet)
 
-        wallet.balance += amount_btc
+        wallet.add_balance :btc, amount_btc
 
         check_opts opts, [:for, :txid]
 
@@ -125,15 +125,20 @@ module DegUsaTax
         end
       end
 
-      def assert_balance(wallet, expected_balance)
+      def assert_balance(wallet, balance_map)
+        if balance_map.is_a?(String) || balance_map.is_a?(Numeric)
+          balance_map = { btc: balance_map }
+        end
         wallet = normalize_wallet(wallet)
-        expected_balance = Bitcoin.normalize_nonnegative_bitcoin(expected_balance)
-        actual_balance = wallet.balance
-        if expected_balance != actual_balance
-          diff = actual_balance - expected_balance
-          raise 'Expected %s balance of %s, got %s.  Difference: %s' %
-                [wallet.name, expected_balance.to_s('F'),
-                 actual_balance.to_s('F'), diff.to_s('F')]
+        balance_map.each do |symbol, expected|
+          expected = Bitcoin.normalize_nonnegative_bitcoin(expected)
+          actual = wallet.balance(symbol)
+          if expected != actual
+            diff = actual - expected
+            raise 'Expected %s %s balance of %s, got %s.  Difference: %s' %
+                  [wallet.name, symbol, expected.to_s('F'),
+                   actual.to_s('F'), diff.to_s('F')]
+          end
         end
       end
 

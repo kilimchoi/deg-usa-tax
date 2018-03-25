@@ -23,7 +23,7 @@ describe DegUsaTax::Bitcoin::History do
     end
 
     it 'make the wallet have an initial balance of 0' do
-      expect(history.wallet(:coinbase).balance).to eq 0
+      expect(history.wallet(:coinbase).balance(:btc)).to eq 0
     end
   end
 
@@ -36,7 +36,7 @@ describe DegUsaTax::Bitcoin::History do
     end
 
     it 'adds the BTC to the wallet\'s balance' do
-      expect(history.wallet(:brain).balance).to eq BigDecimal('1.0005')
+      expect(history.wallet(:brain).balance(:btc)).to eq BigDecimal('1.0005')
     end
 
     it 'adds a transaction with the correct fields to the lot tracker' do
@@ -57,7 +57,7 @@ describe DegUsaTax::Bitcoin::History do
     end
 
     it 'removes the fee and donation from the wallet' do
-      expect(history.wallet(:brain).balance).to eq BigDecimal('0.9985')
+      expect(history.wallet(:brain).balance(:btc)).to eq BigDecimal('0.9985')
     end
 
     it 'adds a donation transaction' do
@@ -91,11 +91,11 @@ describe DegUsaTax::Bitcoin::History do
       end
 
       it 'deducts the amount and fee from the source wallet' do
-        expect(history.wallet(:coinbase).balance).to eq BigDecimal('0.3999')
+        expect(history.wallet(:coinbase).balance(:btc)).to eq BigDecimal('0.3999')
       end
 
       it 'adds the amount to the destination wallet' do
-        expect(history.wallet(:brain).balance).to eq BigDecimal('0.61')
+        expect(history.wallet(:brain).balance(:btc)).to eq BigDecimal('0.61')
       end
     end
 
@@ -133,7 +133,7 @@ describe DegUsaTax::Bitcoin::History do
     end
 
     it 'deducts the amount and fee from the wallet' do
-      expect(history.wallet(:brain).balance).to eq BigDecimal('0.9895')
+      expect(history.wallet(:brain).balance(:btc)).to eq BigDecimal('0.9895')
     end
 
     it 'makes a transaction for the fee first' do
@@ -161,7 +161,7 @@ describe DegUsaTax::Bitcoin::History do
     end
 
     it 'adds the income to the wallet' do
-      expect(history.wallet(:brain).balance).to eq BigDecimal('0.01')
+      expect(history.wallet(:brain).balance(:btc)).to eq BigDecimal('0.01')
     end
 
     it 'adds a purchase transaction' do
@@ -180,12 +180,16 @@ describe DegUsaTax::Bitcoin::History do
     end
 
     it 'does nothing is the assertion is right' do
-      expect { history.assert_balance(:brain, '0.01') }.to_not raise_error
+      expect { history.assert_balance(:brain, btc: '0.01') }.to_not raise_error
     end
 
     it 'raises an error if the assertion is wrong' do
-      expect { history.assert_balance(:brain, '0.44') }.to raise_error \
-        'Expected brain balance of 0.44, got 0.01.  Difference: -0.43'
+      expect { history.assert_balance(:brain, btc: '0.44') }.to raise_error \
+        'Expected brain btc balance of 0.44, got 0.01.  Difference: -0.43'
+    end
+
+    it 'assumes btc if you pass a string' do
+      expect { history.assert_balance(:brain, '0.01') }.to_not raise_error
     end
   end
 end

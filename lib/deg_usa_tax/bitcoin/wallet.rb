@@ -4,13 +4,10 @@ module DegUsaTax
       attr_reader :name
       attr_reader :addresses
 
-      # I am skeptical of whether the 'balance' feature should be here.
-      attr_accessor :balance
-
       def initialize(name, opts = {})
         @name = name.to_sym
         @addresses = []
-        @balance = 0
+        @balance_map = {}
 
         valid_keys = [:off_chain]
         invalid_keys = opts.keys - valid_keys
@@ -23,6 +20,15 @@ module DegUsaTax
 
       def off_chain?
         @off_chain
+      end
+
+      def balance(symbol)
+        @balance_map.fetch(symbol, 0)
+      end
+
+      def add_balance(symbol, amount)
+        @balance_map[symbol] ||= 0
+        @balance_map[symbol] += amount
       end
     end
   end
